@@ -1,0 +1,79 @@
+CREATE TABLE IF NOT EXISTS users (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ full_name VARCHAR(150) NOT NULL,
+ email VARCHAR(190) NOT NULL UNIQUE,
+ password_hash VARCHAR(255) NOT NULL,
+ role ENUM('admin','agent','staff') NOT NULL DEFAULT 'admin',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS properties (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ property_code VARCHAR(40) NOT NULL UNIQUE,
+ title VARCHAR(200) NOT NULL,
+ property_type VARCHAR(80) NOT NULL,
+ listing_type ENUM('For Sale','For Rent') NOT NULL DEFAULT 'For Sale',
+ location VARCHAR(255) NOT NULL,
+ price DECIMAL(15,2) NOT NULL DEFAULT 0,
+ bedrooms INT NOT NULL DEFAULT 0,
+ bathrooms INT NOT NULL DEFAULT 0,
+ floor_area DECIMAL(10,2) NULL,
+ lot_area DECIMAL(10,2) NULL,
+ description TEXT NULL,
+ status ENUM('Available','Reserved','Sold','Rented') NOT NULL DEFAULT 'Available',
+ publish_to_facebook TINYINT(1) NOT NULL DEFAULT 1,
+ created_by INT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS property_images (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ property_id INT NOT NULL,
+ image_path VARCHAR(255) NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS facebook_posts (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ property_id INT NOT NULL,
+ facebook_post_id VARCHAR(255) NULL,
+ status ENUM('Pending','Published','Failed') NOT NULL DEFAULT 'Pending',
+ message TEXT NULL,
+ error_message TEXT NULL,
+ published_at DATETIME NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS clients (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ full_name VARCHAR(180) NOT NULL,
+ phone VARCHAR(50) NULL,
+ email VARCHAR(190) NULL,
+ interest VARCHAR(255) NULL,
+ notes TEXT NULL,
+ status ENUM('New','Contacted','Viewing','Negotiating','Closed') NOT NULL DEFAULT 'New',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS transactions (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ property_id INT NOT NULL,
+ client_id INT NULL,
+ transaction_type ENUM('Sale','Rental') NOT NULL,
+ amount DECIMAL(15,2) NOT NULL,
+ commission DECIMAL(15,2) NOT NULL DEFAULT 0,
+ transaction_date DATE NOT NULL,
+ notes TEXT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (property_id) REFERENCES properties(id),
+ FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS settings (
+ setting_key VARCHAR(100) PRIMARY KEY,
+ setting_value LONGTEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
